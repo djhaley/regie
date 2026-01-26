@@ -17,7 +17,8 @@
 		"observable-slim": "0.2.2"
 	},
 	"scripts": {
-		"build": "tsc"
+		"build": "tsc",
+		"example": "tsx example.ts"
 	},
 	"exports": {
 		"default": "./dist/index.js"

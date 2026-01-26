@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import get from "lodash.get";
+import slim from "observable-slim";
 
 export default (
 		observe: any,
@@ -21,8 +22,8 @@ export default (
 
 				// Update props when the values passed down are overridden at the root
 
-				const path = this.props[propName].__getPath;
-				if (!path) continue;
+				if (!slim.isProxy(this.props[propName])) continue;
+				const path = slim.getPath(this.props[propName]);
 
 				this.__regie_observer_removers__.push(
 					observe(path, (newValue: any): void => {
@@ -108,7 +109,7 @@ export default (
 						`Trying to observe '${firstPath}' prop in the '${this.constructor.name}' component but it hasn't been passed down as a prop during instantiation.`
 					);
 				} else if (
-					!(this.props[firstPath] && this.props[firstPath].__getPath)
+					!(this.props[firstPath] && slim.isProxy(this.props[firstPath]))
 				) {
 					throw new Error(
 						`You are passing down '${firstPath}' as a prop to the '${this.constructor.name}' component but it is a primitive value in the store and can't be passed down as a prop. Consider passing its parent object as a prop instead and you can still observe the primitive in the '${this.constructor.name}' component.`
@@ -117,7 +118,7 @@ export default (
 
 				this.__regie_observer_removers__.push(
 					observe(
-						this.props[firstPath].__getPath
+						slim.getPath(this.props[firstPath])
 							.split(".")
 							.concat(restPath)
 							.join("."),

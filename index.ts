@@ -1,16 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { EventEmitter } from "eventemitter3";
+import get from "lodash.get";
+import isEqual from "lodash.isequal";
+import slim from "observable-slim";
+import register from "./lib/register.js";
 
-type RemoveFirstParameter<T> = T extends (
-	first: any,
-	...rest: infer P
-) => infer R
-	? (...args: P) => R
-	: never;
-
-type Mutation<S> = (
-	arg: { state: S; mutations: MutationTree<S> },
-	value: any
-) => any;
 type Action<S, M> = (
 	arg: {
 		state: S;
@@ -21,19 +15,6 @@ type Action<S, M> = (
 	},
 	value: any
 ) => any;
-
-interface MutationTree<S> {
-	[key: string]: Mutation<S>;
-}
-interface ActionTree<S, M> {
-	[key: string]: Action<S, M>;
-}
-
-import { EventEmitter } from "eventemitter3";
-import get from "lodash.get";
-import isEqual from "lodash.isequal";
-import slim from "observable-slim";
-import register from "./lib/register.js";
 
 type Change = {
 	type:
@@ -50,6 +31,26 @@ type Change = {
 	oldValue?: any;
 	currentPath: string;
 };
+
+type Mutation<S> = (
+	arg: { state: S; mutations: MutationTree<S> },
+	value: any
+) => any;
+
+type RemoveFirstParameter<T> = T extends (
+	first: any,
+	...rest: infer P
+) => infer R
+	? (...args: P) => R
+	: never;
+
+interface ActionTree<S, M> {
+	[key: string]: Action<S, M>;
+}
+
+interface MutationTree<S> {
+	[key: string]: Mutation<S>;
+}
 
 export default function regie<S, M extends MutationTree<S>, A>(
 	{
@@ -114,7 +115,7 @@ export default function regie<S, M extends MutationTree<S>, A>(
 			}
 
 			if (typeof val != "undefined") {
-				const path = (val && val.__getPath) || mapper.path;
+				const path = (val && slim.isProxy(val) && slim.getPath(val)) || mapper.path;
 
 				if (
 					!isEqual(mapper.lastValue, val) ||
