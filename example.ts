@@ -20,11 +20,17 @@ const { $$register, state, actions } = regie({
 	actions: {
 		setScooter({ mutations }, val): void {
 			mutations.setVal(val);
+		},
+		setRid({ mutations }, val): void {
+			mutations.setRid(val);
 		}
 	},
 	mutations: {
 		setVal({ state }, val): void {
 			state.scooter = val;
+		},
+		setRid({ state }, val): void {
+			state.scooter.rid = val;
 		}
 	}
 });
@@ -51,8 +57,9 @@ class Component extends BaseClass {
 		console.log(location, newVal.location);
 		// t.end()
 	}
-	["observe scooter.rid"](): void {
+	["observe scooter.rid"](rid: string): void {
 		console.log("scooter.rid changed");
+		console.log(rid, state);
 		// t.fail()
 	}
 	["observe scooter.battery"](): void {
@@ -69,3 +76,7 @@ const cmp = new Component({ scooter: state.scooter });
 
 console.log(cmp.props.scooter);
 actions.setScooter(newVal);
+actions.setRid("world");
+
+// Clean up observers so the process can exit
+cmp.dispose();
