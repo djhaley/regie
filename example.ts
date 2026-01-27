@@ -1,3 +1,4 @@
+import slim from "observable-slim";
 import regie from "./";
 import BaseClass from "./BaseClass";
 
@@ -23,6 +24,9 @@ const { $$register, state, actions } = regie({
 		},
 		setRid({ mutations }, val): void {
 			mutations.setRid(val);
+		},
+		updateFirstLocation({ mutations }, val): void {
+			mutations.setFirstLocation(val);
 		}
 	},
 	mutations: {
@@ -31,52 +35,62 @@ const { $$register, state, actions } = regie({
 		},
 		setRid({ state }, val): void {
 			state.scooter.rid = val;
+		},
+		setFirstLocation({ state }, val): void {
+			state.scooter.location[0] = val;
 		}
 	}
 });
 
+// In real usage, this would extend LitElement
 class Component extends BaseClass {
 	props: ComponentProps;
 
 	constructor(props: ComponentProps) {
 		super();
-
-		console.log("here are props", props);
 		this.props = props;
-		this.created();
 	}
 
-	created(): void {
-		this.createdHooks();
+	// Simulate being added to DOM (LitElement calls this automatically)
+	connect(): void {
+		this.connectedCallback();
 	}
 
-	dispose(): void {}
+	// Simulate being removed from DOM
+	disconnect(): void {
+		this.disconnectedCallback();
+	}
 
-	["observe scooter.location"](location: number): void {
+	["observe scooter.location[0]"](location: number): void {
 		console.log("scooter.location changed");
 		console.log(location, newVal.location);
-		// t.end()
 	}
 	["observe scooter.rid"](rid: string): void {
 		console.log("scooter.rid changed");
 		console.log(rid, state);
-		// t.fail()
 	}
 	["observe scooter.battery"](): void {
 		console.log("scooter.battery changed");
-		// t.fail()
 	}
 }
 
 $$register({ Component });
 
 console.log("state", state);
-console.log("state", state.scooter);
+console.log("state.scooter", state.scooter);
+
 const cmp = new Component({ scooter: state.scooter });
 
-console.log(cmp.props.scooter);
+// Simulate element being connected to DOM
+cmp.connect();
+
+console.log("cmp.props.scooter", cmp.props.scooter);
 actions.setScooter(newVal);
 actions.setRid("world");
+actions.updateFirstLocation(99);
 
-// Clean up observers so the process can exit
-cmp.dispose();
+// Simulate element being removed from DOM (cleans up observers)
+cmp.disconnect();
+
+// Force observable-slim to clean up immediately (otherwise 10s delay)
+slim.flushCleanup();

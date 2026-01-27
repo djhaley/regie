@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { EventEmitter } from "eventemitter3";
 import get from "lodash.get";
 import isEqual from "lodash.isequal";
@@ -115,7 +116,9 @@ export default function regie<S, M extends MutationTree<S>, A>(
 			}
 
 			if (typeof val != "undefined") {
-				const path = (val && slim.isProxy(val) && slim.getPath(val)) || mapper.path;
+				const path =
+					(val && slim.isProxy(val) && slim.getPath(val)) ||
+					mapper.path;
 
 				if (
 					!isEqual(mapper.lastValue, val) ||

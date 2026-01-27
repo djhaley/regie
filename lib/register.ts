@@ -8,9 +8,16 @@ export default (
 		state: any
 	): (({ Component }: { Component: any }) => void) =>
 	({ Component }: { Component: any }): void => {
-		const originalHook = Component.prototype.createdHooks;
+		const originalConnected = Component.prototype.connectedCallback;
 
-		Component.prototype.createdHooks = function (): void {
+		Component.prototype.connectedCallback = function (): void {
+			// Call original first (LitElement needs this for setup)
+			if (originalConnected) originalConnected.call(this);
+
+			// Guard against re-registration on reconnect
+			if (this.__regie_initialized__) return;
+			this.__regie_initialized__ = true;
+
 			this.__regie_observer_removers__ = [];
 
 			for (const propName in this.props) {
@@ -109,7 +116,10 @@ export default (
 						`Trying to observe '${firstPath}' prop in the '${this.constructor.name}' component but it hasn't been passed down as a prop during instantiation.`
 					);
 				} else if (
-					!(this.props[firstPath] && slim.isProxy(this.props[firstPath]))
+					!(
+						this.props[firstPath] &&
+						slim.isProxy(this.props[firstPath])
+					)
 				) {
 					throw new Error(
 						`You are passing down '${firstPath}' as a prop to the '${this.constructor.name}' component but it is a primitive value in the store and can't be passed down as a prop. Consider passing its parent object as a prop instead and you can still observe the primitive in the '${this.constructor.name}' component.`
@@ -118,7 +128,8 @@ export default (
 
 				this.__regie_observer_removers__.push(
 					observe(
-						slim.getPath(this.props[firstPath])
+						slim
+							.getPath(this.props[firstPath])
 							.split(".")
 							.concat(restPath)
 							.join("."),
@@ -126,17 +137,19 @@ export default (
 					)
 				);
 			});
-
-			if (originalHook) originalHook.call(this);
 		};
 
-		const originalDispose = Component.prototype.dispose;
+		const originalDisconnected = Component.prototype.disconnectedCallback;
 
-		Component.prototype.dispose = function (): void {
-			this.__regie_observer_removers__.forEach(
-				(removeObserver: () => void): void => removeObserver()
-			);
+		Component.prototype.disconnectedCallback = function (): void {
+			if (this.__regie_observer_removers__) {
+				this.__regie_observer_removers__.forEach(
+					(removeObserver: () => void): void => removeObserver()
+				);
+				this.__regie_observer_removers__ = [];
+			}
+			this.__regie_initialized__ = false;
 
-			originalDispose.call(this);
+			if (originalDisconnected) originalDisconnected.call(this);
 		};
 	};
