@@ -19,24 +19,13 @@ const { $$register, state, actions } = regie({
 		scooter: { location: [32, 45], battery: [10, 32], rid: "hello" }
 	},
 	actions: {
-		setScooter({ mutations }, val): void {
-			mutations.setVal(val);
-		},
-		setRid({ mutations }, val): void {
-			mutations.setRid(val);
-		},
-		updateFirstLocation({ mutations }, val): void {
-			mutations.setFirstLocation(val);
-		}
-	},
-	mutations: {
-		setVal({ state }, val): void {
+		setScooter({ state }, val): void {
 			state.scooter = val;
 		},
 		setRid({ state }, val): void {
 			state.scooter.rid = val;
 		},
-		setFirstLocation({ state }, val): void {
+		updateFirstLocation({ state }, val): void {
 			state.scooter.location[0] = val;
 		}
 	}

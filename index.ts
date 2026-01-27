@@ -1,18 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { EventEmitter } from "eventemitter3";
-import get from "lodash.get";
-import isEqual from "lodash.isequal";
+import isEqual from "./lib/isEqual.js";
 import slim from "observable-slim";
+import getByPath from "./lib/getByPath.js";
 import register from "./lib/register.js";
 
-type Action<S, M> = (
+type Action<S, A> = (
 	arg: {
 		state: S;
-		mutations: {
-			[K in keyof M]: RemoveFirstParameter<M[K]>;
-		};
-		actions: ActionTree<S, M>;
+		actions: ActionTree<S, A>;
 	},
 	value: any
 ) => any;
@@ -33,11 +30,6 @@ type Change = {
 	currentPath: string;
 };
 
-type Mutation<S> = (
-	arg: { state: S; mutations: MutationTree<S> },
-	value: any
-) => any;
-
 type RemoveFirstParameter<T> = T extends (
 	first: any,
 	...rest: infer P
@@ -45,27 +37,20 @@ type RemoveFirstParameter<T> = T extends (
 	? (...args: P) => R
 	: never;
 
-interface ActionTree<S, M> {
-	[key: string]: Action<S, M>;
+interface ActionTree<S, A> {
+	[key: string]: Action<S, A>;
 }
 
-interface MutationTree<S> {
-	[key: string]: Mutation<S>;
-}
-
-export default function regie<S, M extends MutationTree<S>, A>(
+export default function regie<S, A>(
 	{
 		initialState = {} as S,
-		actions = {} as A & ActionTree<S, M>,
-		mutations = {} as M
+		actions = {} as A & ActionTree<S, A>
 	}: {
 		initialState?: S;
-		actions?: A & ActionTree<S, M>;
-		mutations?: M;
+		actions?: A & ActionTree<S, A>;
 	} = {
 		initialState: {} as S,
-		actions: {} as A & ActionTree<S, M>,
-		mutations: {} as M
+		actions: {} as A & ActionTree<S, A>
 	}
 ): {
 	state: S;
@@ -74,7 +59,6 @@ export default function regie<S, M extends MutationTree<S>, A>(
 		handler: (value: any, change: any) => void
 	) => () => void;
 	actions: { [key in keyof A]: RemoveFirstParameter<A[key]> };
-	mutations: { [key in keyof M]: RemoveFirstParameter<M[key]> };
 	$$register: any;
 } {
 	type MapperFn = ((state: S) => any) & { path?: string; lastValue?: any };
@@ -153,7 +137,7 @@ export default function regie<S, M extends MutationTree<S>, A>(
 			mapperFn = (): void => mapper;
 
 		if (typeof mapper == "string") {
-			mapperFn = (): any => get(state, mapper);
+			mapperFn = (): any => getByPath(state, mapper);
 			mapperFn.path = mapper;
 		}
 
@@ -175,34 +159,19 @@ export default function regie<S, M extends MutationTree<S>, A>(
 	const boundActions = {} as {
 		[key in keyof A]: RemoveFirstParameter<A[key]>;
 	};
-	const boundMutations = {} as {
-		[key in keyof M]: RemoveFirstParameter<M[key]>;
-	};
 
 	const store = {
 		state,
 		observe,
-		actions: boundActions,
-		mutations: boundMutations
+		actions: boundActions
 	};
 
 	/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-	// Will need to understand the usage better before making this ESLint friendly
 	Object.keys(actions || {}).forEach((key: string): void => {
 		boundActions[key as keyof A] = (
 			actions[key as keyof A] as Function
 		).bind(store, {
 			actions: boundActions,
-			mutations: boundMutations,
-			state
-		});
-	});
-
-	Object.keys(mutations || {}).forEach((key: string): void => {
-		boundMutations[key as keyof M] = (
-			mutations[key as keyof M] as Function
-		).bind(store, {
-			mutations: boundMutations,
 			state
 		});
 	});

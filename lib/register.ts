@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import get from "lodash.get";
 import slim from "observable-slim";
+import getByPath from "./getByPath.js";
 
 export default (
 		observe: any,
@@ -67,7 +67,7 @@ export default (
 				let observer;
 
 				if (typeof mapStateMethods[method] == "string") {
-					observer = (): any => get(state, mapStateMethods[method]);
+					observer = (): any => getByPath(state, mapStateMethods[method]);
 				} else if (typeof mapStateMethods[method] == "function") {
 					try {
 						observer = mapStateMethods[method].bind(this, state);
@@ -99,7 +99,7 @@ export default (
 					get: (): any => propValue,
 					set: (newValue: any): never => {
 						throw new Error(
-							`Refusing to update '${method}' to ${newValue}. Please use a mutation to mutate the state.`
+							`Refusing to update '${method}' to ${newValue}. Please use an action to update the state.`
 						);
 					}
 				});
