@@ -67,7 +67,8 @@ export default (
 				let observer;
 
 				if (typeof mapStateMethods[method] == "string") {
-					observer = (): any => getByPath(state, mapStateMethods[method]);
+					observer = (): any =>
+						getByPath(state, mapStateMethods[method]);
 				} else if (typeof mapStateMethods[method] == "function") {
 					try {
 						observer = mapStateMethods[method].bind(this, state);

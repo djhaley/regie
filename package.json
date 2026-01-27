@@ -15,7 +15,8 @@
 	},
 	"scripts": {
 		"build": "tsc",
-		"example": "tsx example.ts"
+		"example": "tsx example.ts",
+		"example2": "tsx example2.ts"
 	},
 	"exports": {
 		"default": "./dist/index.js"
