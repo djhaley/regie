@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-import slim from "observable-slim";
+import ObservableSlim from "observable-slim";
 import getByPath from "./getByPath.js";
 
 export default (
@@ -20,7 +19,13 @@ export default (
 
 			this.__regie_observer_removers__ = [];
 
+			const showMe = (window as any).showMe;
+
+			if (showMe) console.log("props", this.props);
+			if (showMe) console.log("activeTab", this.props.activeTab);
+			if (showMe) console.log("triggers", this.props.triggers);
 			for (const propName in this.props) {
+				if (showMe) console.log("propName", propName);
 				if (
 					this.props[propName] == null ||
 					typeof this.props[propName] == "undefined"
@@ -29,8 +34,9 @@ export default (
 
 				// Update props when the values passed down are overridden at the root
 
-				if (!slim.isProxy(this.props[propName])) continue;
-				const path = slim.getPath(this.props[propName]);
+				if (!ObservableSlim.isProxy(this.props[propName])) continue;
+				const path = ObservableSlim.getPath(this.props[propName]);
+				if (showMe) console.log("propName", propName, "path", path);
 
 				this.__regie_observer_removers__.push(
 					observe(path, (newValue: any): void => {
@@ -38,6 +44,10 @@ export default (
 					})
 				);
 			}
+
+			if (showMe) console.log(this.props["activeTab"]);
+			if (showMe)
+				console.log(ObservableSlim.getPath(this.props["activeTab"]));
 
 			const methods = new Set<string>();
 
@@ -108,8 +118,11 @@ export default (
 
 			observeMethods.forEach((method: string): void => {
 				const path = method.slice(8);
+				if (showMe) console.log("observing path", path);
 
 				const [firstPath, ...restPath] = path.split(".");
+				if (showMe) console.log(mapStateMethods);
+
 				if (path in mapStateMethods) {
 					return;
 				} else if (!(firstPath in this.props)) {
@@ -119,7 +132,7 @@ export default (
 				} else if (
 					!(
 						this.props[firstPath] &&
-						slim.isProxy(this.props[firstPath])
+						ObservableSlim.isProxy(this.props[firstPath])
 					)
 				) {
 					throw new Error(
@@ -129,8 +142,7 @@ export default (
 
 				this.__regie_observer_removers__.push(
 					observe(
-						slim
-							.getPath(this.props[firstPath])
+						ObservableSlim.getPath(this.props[firstPath])
 							.split(".")
 							.concat(restPath)
 							.join("."),
@@ -138,6 +150,9 @@ export default (
 					)
 				);
 			});
+
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(window as any).showMe = false;
 		};
 
 		const originalDisconnected = Component.prototype.disconnectedCallback;

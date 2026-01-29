@@ -11,7 +11,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"eventemitter3": "^5.0.4",
-		"observable-slim": "0.2.2"
+		"observable-slim": "^0.2.2"
 	},
 	"scripts": {
 		"build": "tsc",
@@ -19,7 +19,10 @@
 		"example2": "tsx example2.ts"
 	},
 	"exports": {
-		"default": "./dist/index.js"
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
 	},
 	"files": [
 		"dist"

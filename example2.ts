@@ -9,10 +9,14 @@ type StateProps = {
 	myString: string;
 };
 
-type ComponentProps = {
-	myState: {
-		greeting: string;
-	};
+// type ComponentProps = {
+// 	myState: {
+// 		greeting: string;
+// 	};
+// };
+
+type MyState = {
+	greeting: string;
 };
 
 const { $$register, state, actions } = regie({
@@ -34,22 +38,22 @@ const { $$register, state, actions } = regie({
 
 // In real usage, this would extend LitElement
 class Component extends BaseClass {
-	props?: ComponentProps;
+	props?: MyState;
 
 	constructor() {
 		super();
 	}
 
 	get Greeting(): string {
-		return `${this.props?.myState.greeting} ${state.myString}`;
+		return `${this.props?.greeting} ${state.myString}`;
 	}
 
 	override connectedCallback(): void {
 		super.connectedCallback();
-		this.props = { myState: state.myState };
+		this.props = state.myState;
 	}
 
-	["observe myState.greeting"](newVal: string): void {
+	["observe greeting"](newVal: string): void {
 		console.log("greeting changed", newVal);
 	}
 }
